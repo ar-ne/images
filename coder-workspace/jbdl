@@ -1,0 +1,180 @@
+#!/usr/bin/env bash
+set -e
+mkdir -p /tmp/jbdl
+cd /tmp/jbdl
+
+fetchJBProd(){
+    echo "Downloading JB product.json from https://data.services.jetbrains.com/products"
+    wget https://data.services.jetbrains.com/products -qO jbproducts.json
+}
+
+JBCDL_dir=$(realpath 'jbcdl')
+JBCDL="$JBCDL_dir/bin/jetbrains-clients-downloader"
+MIRROR_DIR=$(realpath 'mirror')
+
+fetchDownloader(){
+    echo "check downloader update at https://www.jetbrains.com/code-with-me/on-prem/ under JetBrains Client Downloader section"
+    if [ -d "$JBCDL_dir" ]; then
+        return 0
+    fi
+    
+    echo "JetBrains Client Downloader not found, downloading ..."
+    wget https://download.jetbrains.com/idea/code-with-me/backend/jetbrains-clients-downloader-linux-x86_64-1867.tar.gz -qO downloader.tgz
+    mkdir -p $JBCDL_dir
+    echo "unpacking JetBrains Client Downloader"
+    tar zxvf downloader.tgz --strip-components=1 -C $JBCDL_dir
+    rm downloader.tgz
+}
+
+findLatestRelease(){
+    jq -r --arg CODE "$1" '.[] | select(.code == $CODE) | .releases | map(select(.type == "release")) | .[0] | "\(.build)"' jbproducts.json
+}
+
+buildToVersion(){
+    jq -r --arg CODE "$1" --arg BUILD "$2" \
+     '.[] | select(.code == $CODE) | .releases[] | select(.build == $BUILD) | "\(.version)"' \
+     jbproducts.json
+}
+
+declare -A codeMap
+codeMap["PCP"]="PY"
+codeMap["IIU"]="IU"
+sanitizeCode(){
+    local CODE="$1"
+    if [[ ! -z "${codeMap[$CODE]}" ]]; then
+        echo "[$CODE] mapped to [${codeMap[$CODE]}]" >&2
+        CODE="${codeMap[$CODE]}"
+    fi
+    echo "$CODE"
+}
+sanitizeBuild(){
+    local CODE="$1"
+    local BUILD="$2"
+    if [ -z "$BUILD" ]; then
+        BUILD=$(findLatestRelease $CODE)
+        echo "BUILD is not set. using latest $BUILD." >&2
+    fi
+    echo "$BUILD"
+}
+
+download(){
+    local CODE=$(sanitizeCode "$1")
+    local BUILD=$(sanitizeBuild "$1" "$2")
+
+    echo "Downloading [$CODE] build ($BUILD)"
+
+    fetchDownloader
+
+    $JBCDL --products-filter $CODE --build-filter $BUILD --platforms-filter linux-x64 --download-backends ./mirror
+    # $JBCDL --products-filter $CODE --build-filter $BUILD --platforms-filter linux-x64,windows-x64,osx-x64 ./clients
+}
+
+findBackendTarPath(){
+    local CODE=$(sanitizeCode "$1")
+    local BUILD=$(sanitizeBuild "$1" "$2")
+    
+    local LINK=$(
+    jq -r --arg CODE "$CODE" --arg BUILD "$BUILD" \
+        '.[] | select(.code == $CODE) | .releases[] | select(.build == $BUILD) | "\(.downloads.linux.link)"' \
+        "$MIRROR_DIR/backends/products.json"
+    )
+
+    echo "$MIRROR_DIR/backends/$LINK"
+}
+
+install(){
+    local PACK=$(findBackendTarPath "$1" "$2")
+    mkdir -p /opt/jetbrains/
+    echo "Unpacking $PACK /opt/jetbrains/ ..."
+    tar zxf "$PACK" -C /opt/jetbrains/
+}
+
+if [ ! -f "jbproducts.json" ]; then
+  if [ "$1" != "local" ]; then
+    echo "jbproducts does not exist."
+    fetchJBProd
+  fi
+fi
+
+# Check if the first argument is "ls"
+if [ "$1" == "ls" ]; then
+    if [ -z "$2" ]; then
+        echo "Availiable:"
+        jq -r '.[] | "\(.code) | \(.name)"' jbproducts.json | awk -F '|' '
+            BEGIN {
+                printf "\033[32m%-15s %-30s\033[0m\n", "Code", "Name"
+            }
+            {
+                gsub(/^ +| +$/, "", $1)
+                gsub(/^ +| +$/, "", $2)
+                printf "%-15s %-30s\n", $1, $2
+            }
+            '
+        exit 0
+    fi
+
+    jq -r --arg CODE "$2" '.[] | select(.code == $CODE) | .releases | reverse | .[] | "\(.version)|\(.type)|\(.date)|\(.build)"' jbproducts.json | awk -F '|' '
+        BEGIN {
+            printf "\033[32m%-15s %-30s %-45s %-60s\033[0m\n", "Version", "Type", "Date", "Build"
+        }
+        {
+            gsub(/^ +| +$/, "", $1)
+            gsub(/^ +| +$/, "", $2)
+            printf "%-15s %-30s %-45s %-60s\n", $1, $2, $3, $4
+        }
+        '
+
+    exit 0
+fi
+
+if [ "$1" == "dl" ]; then
+    fetchDownloader
+    shift
+    download $@
+    exit 0
+fi
+
+if [ "$1" == "jbdl" ]; then
+    fetchDownloader
+    shift
+    $JBCDL $@
+    exit 0
+fi
+
+if [ "$1" == "install" ]; then
+    fetchDownloader
+    shift
+    download $1 $2
+    install $1 $2
+    exit 0
+fi
+
+if [ "$1" == "local" ]; then
+    if [ -z "$2" ]; then
+        echo "usage: jbdl local [ide prefix] <action>"
+        echo "availiable ides:"
+        ls /opt/jetbrains
+        exit 1
+    fi
+    IDE_PATH=$(ls -d /opt/jetbrains/${2}*)
+    REMOTE_DEV_SERVER_SH="$IDE_PATH/bin/remote-dev-server.sh"
+    echo "using ide at $IDE_PATH"
+
+    if [ "$3" == "del" ]; then
+        rm -rf "$IDE_PATH"
+    fi
+    if [ "$3" == "reg" ]; then
+        $REMOTE_DEV_SERVER_SH registerBackendLocationForGateway
+        exit $?
+    fi
+    if [ "$3" == "sh" ]; then
+        shift 3
+        $REMOTE_DEV_SERVER_SH $@
+        exit $?
+    fi
+    echo "availiable action: reg, del, sh"
+    exit 1
+fi
+
+echo "usage ./jbdl [ ls | dl | jbdl | local ] <CODE> <BUILD>"
+exit 1
