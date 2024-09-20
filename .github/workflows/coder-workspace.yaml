@@ -1,4 +1,4 @@
-name: Build and Push Miniconda Docker Images
+name: Build and Push Coder-Workspace Images
 
 # only run on tag
 on:
@@ -55,7 +55,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./coder-workspace
-          file: ./docker/cuda.Dockerfile
+          file: ./coder-workspace/cuda.Dockerfile
           push: true
           tags: ${{ env.REGISTRY }}/${{ github.repository }}/cuda:${{ matrix.cuda }}-${{ matrix.distro }}
           build-args: |
@@ -81,7 +81,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./coder-workspace
-          file: ./docker/miniconda.Dockerfile
+          file: ./coder-workspace/miniconda.Dockerfile
           push: false
           tags: ${{ env.REGISTRY }}/${{ github.repository }}/miniconda:${{ matrix.conda }}
           target: pre-jb-ide
@@ -127,7 +127,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./coder-workspace
-          file: ./docker/miniconda.Dockerfile
+          file: ./coder-workspace/miniconda.Dockerfile
           push: true
           tags: ${{ env.REGISTRY }}/${{ github.repository }}/miniconda:${{ matrix.conda }}-${{ matrix.ide }}
           build-args: |
