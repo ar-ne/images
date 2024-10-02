@@ -1,6 +1,6 @@
 ARG MINICONDA_VER=24.7.1-0
 FROM continuumio/miniconda3:${MINICONDA_VER} AS base
-RUN apt update && apt upgrade -y && apt install -y curl wget zsh git jq micro sudo
+RUN apt update && apt upgrade -y && apt install -y curl wget zsh git jq micro sudo ffmpeg libsm6 libxext6
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN ln -s $(which code-server) /usr/bin/code
 RUN groupadd -g 1000 coder && \
