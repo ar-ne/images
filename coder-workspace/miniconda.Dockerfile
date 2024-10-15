@@ -1,6 +1,7 @@
 ARG MINICONDA_VER=24.7.1-0
 FROM continuumio/miniconda3:${MINICONDA_VER} AS base
-RUN apt update && apt upgrade -y && apt install -y curl wget zsh git jq micro sudo ffmpeg libsm6 libxext6
+RUN apt update && apt upgrade -y && \
+    apt install -y curl wget zsh git jq micro sudo ffmpeg libsm6 libxext6 unzip p7zip unar
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN ln -s $(which code-server) /usr/bin/code
 RUN groupadd -g 1000 coder && \
@@ -8,6 +9,7 @@ RUN groupadd -g 1000 coder && \
     passwd -d coder && \
     passwd -d root && \
     usermod -aG sudo coder && \
+    sudo sed -i "s|\(^coder:.*:\)/bin/[^:]*$|\1$(which zsh)|" /etc/passwd && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # install omz
