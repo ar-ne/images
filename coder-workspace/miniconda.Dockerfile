@@ -15,14 +15,13 @@ RUN groupadd -g 1000 coder && \
     sudo sed -i "s|\(^coder:.*:\)/bin/[^:]*$|\1$(which zsh)|" /etc/passwd && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
+RUN conda install -y nvidia/label/cuda-12.4.0::cuda-nvcc conda-forge::nvitop pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
+
 # install omz
 WORKDIR /home/coder
 USER coder
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 RUN conda init zsh
-RUN zsh -c "
-conda install -y nvidia/label/cuda-12.4.0::cuda-nvcc conda-forge::nvitop pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
-"
 RUN sudo apt-get clean
 
 # compress for different JB ide
