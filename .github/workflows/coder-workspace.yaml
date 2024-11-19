@@ -100,14 +100,7 @@ jobs:
         with:
           account: ar-ne
           token: ${{ secrets.GITHUB_TOKEN }}
-          image-names: "miniconda"
+          image-names: "images/miniconda"
           cut-off: 4w
           dry-run: true
-      - uses: snok/container-retention-policy@v3.0.0
-        name: Delete old CUDA images
-        with:
-          account: ar-ne
-          token: ${{ secrets.GITHUB_TOKEN }}
-          image-names: "cuda"
-          cut-off: 4w
-          dry-run: true
+          keep-n-most-recent: 3
