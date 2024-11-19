@@ -4,7 +4,7 @@ RUN apt update && apt upgrade -y && \
     apt install -y curl wget zsh git \
     jq micro sudo ffmpeg libsm6 libxext6 \
     unzip p7zip unar file build-essential \
-    make cmake unar
+    make cmake htop
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN ln -s $(which code-server) /usr/bin/code
 RUN groupadd -g 1000 coder && \
@@ -21,6 +21,8 @@ RUN conda install -y nvidia/label/cuda-12.4.0::cuda-nvcc conda-forge::nvitop pyt
 WORKDIR /home/coder
 USER coder
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+RUN sed -i "1i unsetopt PROMPT_SP" /home/coder/.zshrc
+RUN sed -i "1i zstyle ':omz:update' mode disabled" /home/coder/.zshrc
 RUN conda init zsh
 RUN sudo apt-get clean
 
@@ -41,5 +43,5 @@ RUN jbdl install ${IDE_CODE} && \
     jbdl local '*' reg && \
     rm -rf /tmp/jb
 
-
+ENV DISABLE_AUTO_UPDATE=true
 WORKDIR /home/coder
