@@ -101,6 +101,6 @@ jobs:
           account: ar-ne
           token: ${{ secrets.GITHUB_TOKEN }}
           image-names: "images/miniconda"
-          cut-off: 4w
-          dry-run: true
+          cut-off: 1w
+          dry-run: false
           keep-n-most-recent: 3
