@@ -6,7 +6,7 @@ on:
     #    branches:
     #      - main
     tags:
-      - 'coder-workspace-v*'
+      - 'cw-v*'
 
 env:
   REGISTRY: ghcr.io
