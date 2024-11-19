@@ -4,5 +4,3 @@
 
 - [Miniconda + JetBrains IDE](./coder-workspace/miniconda.Dockerfile)
     > ghcr.io/ar-ne/images/miniconda:\<miniconda_version>-\<ide>
-- [CUDA dev tools](./coder-workspace/cuda.Dockerfile)
-    > ghcr.io/ar-ne/images/miniconda:cuda-\<cuda_ver>-\<distro>
