@@ -160,7 +160,7 @@ jobs:
           dry-run: false
           keep-n-most-recent: 3
       - uses: snok/container-retention-policy@v3.0.0
-        name: Delete old MiniConda images
+        name: Delete old CUDA images
         with:
           account: ar-ne
           token: ${{ secrets.GITHUB_TOKEN }}

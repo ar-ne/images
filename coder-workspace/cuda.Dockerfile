@@ -1,16 +1,17 @@
 ARG cuda=12.6.0
 ARG distro=ubuntu24.04
 FROM nvidia/cuda:${cuda}-cudnn-devel-${distro} AS base
-RUN apt update && \
-    apt install -y wget curl sudo zsh git build-essential && \
-    apt clean && \
-    rm -rf /var/lib/apt/lists/* \
 
 RUN apt update && apt upgrade -y && \
     apt install -y curl wget zsh git \
     jq micro sudo ffmpeg libsm6 libxext6 \
     unzip p7zip unar file build-essential \
     make cmake htop
+RUN apt update && \
+    apt install -y wget curl sudo zsh git build-essential && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN ln -s $(which code-server) /usr/bin/code
 
