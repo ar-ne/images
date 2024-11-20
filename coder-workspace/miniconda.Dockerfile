@@ -15,8 +15,6 @@ RUN groupadd -g 1000 coder && \
     sudo sed -i "s|\(^coder:.*:\)/bin/[^:]*$|\1$(which zsh)|" /etc/passwd && \
     echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-RUN conda install -y nvidia/label/cuda-12.4.0::cuda-nvcc conda-forge::nvitop
-
 # install omz
 WORKDIR /home/coder
 USER coder
