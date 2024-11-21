@@ -1,10 +1,12 @@
 ARG MINICONDA_VER=24.7.1-0
 FROM continuumio/miniconda3:${MINICONDA_VER} AS base
+
 RUN apt update && apt upgrade -y && \
     apt install -y curl wget zsh git \
     jq micro sudo ffmpeg libsm6 libxext6 \
     unzip p7zip unar file build-essential \
-    make cmake htop
+    make cmake htop nvitop && \
+    apt clean && rm -rf /var/lib/apt/lists/*
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN ln -s $(which code-server) /usr/bin/code
 RUN groupadd -g 1000 coder && \
@@ -22,7 +24,7 @@ RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master
 RUN sed -i "1i unsetopt PROMPT_SP" /home/coder/.zshrc
 RUN sed -i "1i zstyle ':omz:update' mode disabled" /home/coder/.zshrc
 RUN conda init zsh
-RUN sudo apt-get update
+RUN sudo apt-get clean
 
 # compress for different JB ide
 FROM scratch AS pre-jb-ide
