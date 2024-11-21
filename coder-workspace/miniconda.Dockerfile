@@ -22,7 +22,7 @@ RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master
 RUN sed -i "1i unsetopt PROMPT_SP" /home/coder/.zshrc
 RUN sed -i "1i zstyle ':omz:update' mode disabled" /home/coder/.zshrc
 RUN conda init zsh
-RUN sudo apt-get clean
+RUN sudo apt-get update
 
 # compress for different JB ide
 FROM scratch AS pre-jb-ide
