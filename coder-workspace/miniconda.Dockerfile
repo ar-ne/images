@@ -5,7 +5,7 @@ RUN apt update && apt upgrade -y && \
     apt install -y curl wget zsh git \
     jq micro sudo ffmpeg libsm6 libxext6 \
     unzip p7zip unar file build-essential \
-    make cmake htop nvitop && \
+    make cmake htop && \
     apt clean && rm -rf /var/lib/apt/lists/*
 RUN curl -fsSL https://code-server.dev/install.sh | sh
 RUN ln -s $(which code-server) /usr/bin/code
