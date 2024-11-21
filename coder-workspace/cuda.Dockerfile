@@ -38,3 +38,4 @@ COPY --from=base / /
 
 USER coder
 WORKDIR /home/coder
+ENV PATH="/usr/local/cuda/bin/:$PATH"
